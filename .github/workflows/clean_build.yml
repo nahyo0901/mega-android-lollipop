@@ -37,7 +37,8 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          cmdline-tools-version: 9123335   # cmdline-tools 8.0 — JDK 11 compatible
+          cmdline-tools-version: 9123335
+          packages: 'platform-tools'
 
       - name: Install required SDK platform & build tools
         run: |
