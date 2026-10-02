@@ -1,0 +1,12 @@
+
+#all sdk_devs can approve MRs that change anything in the repo...
+
+* @SDK/sdk_devs
+
+
+# ... except MRs relative to bindings, which needs approval by the corresponding App's team
+
+/bindings/Objective-C/ @mobile/iOS
+/bindings/java/ @mobile/Android
+# right now, desktop app doesn't integrate chat. Only QtApp does, so SDK devs can approve changes in path below
+#/bindings/qt/ @desktop

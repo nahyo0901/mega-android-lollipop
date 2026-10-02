@@ -1,0 +1,75 @@
+name: Build MEGA APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      java-version:
+        description: 'JDK version to use'
+        required: false
+        default: '11'
+      build-variant:
+        description: 'Gradle assemble task (e.g. assembleDebug, assembleRelease)'
+        required: false
+        default: 'assembleDebug'
+      gradle-args:
+        description: 'Additional Gradle arguments'
+        required: false
+        default: ''
+
+permissions: read-all
+
+concurrency:
+  group: build-mega-apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK
+        id: setup-java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ github.event.inputs['java-version'] }}
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install required SDK platform & build tools
+        run: |
+          sdkmanager "platforms;android-31"
+          sdkmanager "build-tools;30.0.2"
+
+      - name: Install native build dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential swig automake libtool autoconf cmake
+
+      - name: Install NDK r21d
+        run: |
+          wget https://dl.google.com/android/repository/android-ndk-r21d-linux-x86_64.zip
+          unzip -q android-ndk-r21d-linux-x86_64.zip
+          echo "NDK_ROOT=$PWD/android-ndk-r21d" >> $GITHUB_ENV
+
+      - name: Build native SDK
+        working-directory: app/src/main/jni
+        run: ./build.sh all
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build APK
+        run: ./gradlew ${{ github.event.inputs['build-variant'] }} --stacktrace ${{ github.event.inputs['gradle-args'] }}
+        env:
+          JAVA_HOME: ${{ steps.setup-java.outputs.java-home || env.JAVA_HOME }}
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: mega-apk
+          path: app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
