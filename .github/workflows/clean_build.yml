@@ -33,10 +33,11 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ github.event.inputs['java-version'] }}
-          cache: ''
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        env:
+          SKIP_JDK_VERSION_CHECK: 'true'
 
       - name: Install required SDK platform & build tools
         run: |
