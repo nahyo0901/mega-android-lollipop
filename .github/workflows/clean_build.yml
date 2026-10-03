@@ -56,7 +56,9 @@ jobs:
 
       - name: Build native SDK
         working-directory: app/src/main/jni
-        run: ./build.sh all
+        run: |
+          chmod +x build.sh
+          ./build.sh all
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
