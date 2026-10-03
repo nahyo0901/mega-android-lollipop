@@ -61,6 +61,14 @@ jobs:
           sed -i 's#LOG_FILE=/dev/null#LOG_FILE=/tmp/build_sdk.log#' build.sh
           ./build.sh all
 
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-sdk-log
+          path: /tmp/build_sdk.log
+          if-no-files-found: ignore
+
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
@@ -68,11 +76,3 @@ jobs:
         run: ./gradlew clean assembleDebug --no-build-cache --stacktrace ${{ github.event.inputs['gradle-args'] }}
         env:
           JAVA_HOME: ${{ steps.setup-java.outputs.java-home || env.JAVA_HOME }}
-
-      - name: Upload build log
-              if: always()
-              uses: actions/upload-artifact@v4
-              with:
-                name: build-sdk-log
-                path: app/src/main/jni/*.log
-                if-no-files-found: ignore
