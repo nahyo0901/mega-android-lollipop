@@ -1,0 +1,78 @@
+name: Clean Build (No Cache)
+
+on:
+  workflow_dispatch:
+    inputs:
+      java-version:
+        description: 'JDK version to use'
+        required: false
+        default: '11'
+      gradle-args:
+        description: 'Additional Gradle arguments'
+        required: false
+        default: ''
+
+permissions: read-all
+
+concurrency:
+  group: clean-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK
+        id: setup-java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ github.event.inputs['java-version'] }}
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 9123335
+          packages: 'platform-tools'
+
+      - name: Install required SDK platform & build tools
+        run: |
+          sdkmanager "platforms;android-31"
+          sdkmanager "build-tools;30.0.2"
+
+      - name: Install native build dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential swig automake libtool autoconf cmake
+
+      - name: Install NDK r21d
+        run: |
+          wget https://dl.google.com/android/repository/android-ndk-r21d-linux-x86_64.zip
+          unzip -q android-ndk-r21d-linux-x86_64.zip
+          echo "NDK_ROOT=$PWD/android-ndk-r21d" >> $GITHUB_ENV
+
+      - name: Build native SDK
+        working-directory: app/src/main/jni
+        run: |
+          chmod +x build.sh
+          sed -i 's#LOG_FILE=/dev/null#LOG_FILE=/tmp/build_sdk.log#' build.sh
+          ./build.sh all
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Run clean build with no build cache
+        run: ./gradlew clean assembleDebug --no-build-cache --stacktrace ${{ github.event.inputs['gradle-args'] }}
+        env:
+          JAVA_HOME: ${{ steps.setup-java.outputs.java-home || env.JAVA_HOME }}
+
+      - name: Upload build log
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                name: build-sdk-log
+                path: app/src/main/jni/*.log
+                if-no-files-found: ignore
