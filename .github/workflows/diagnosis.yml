@@ -1,4 +1,4 @@
-name: Clean Build (No Cache)
+name: Clean Build (No Cache)(Diagnosis)
 
 on:
   workflow_dispatch:
