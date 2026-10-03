@@ -54,6 +54,18 @@ jobs:
           unzip -q android-ndk-r21d-linux-x86_64.zip
           echo "NDK_ROOT=$PWD/android-ndk-r21d" >> $GITHUB_ENV
 
+      - name: Debug SWIG include paths
+        working-directory: app/src/main/jni
+        run: |
+          echo "--- swig version ---"
+          swig -version
+          echo "--- does megaapi.h exist? ---"
+          ls -la mega/sdk/include/megaapi.h || echo "NOT FOUND at mega/sdk/include/megaapi.h"
+          echo "--- mega/sdk/include contents ---"
+          ls -la mega/sdk/include/ | head -20
+          echo "--- megachatapi.i lines 1-25 ---"
+          sed -n '1,25p' megachat/sdk/bindings/megachatapi.i
+
       - name: Build native SDK
         working-directory: app/src/main/jni
         run: |
