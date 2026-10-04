@@ -1,4 +1,4 @@
-name: Inspect build.sh SWIG invocation
+name: Diagnose SWIG Include Path
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
 permissions: read-all
 
 jobs:
-  inspect:
+  diagnose:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -14,5 +14,27 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Grep swig usage in build.sh
-        run: grep -n "swig" app/src/main/jni/build.sh
+      - name: Install native build dependencies
+        run: sudo apt-get update && sudo apt-get install -y swig
+
+      - name: Debug SWIG include paths
+        working-directory: app/src/main/jni
+        run: |
+          {
+            echo "--- swig version ---"
+            swig -version
+            echo "--- does megaapi.h exist? ---"
+            ls -la mega/sdk/include/megaapi.h || echo "NOT FOUND at mega/sdk/include/megaapi.h"
+            echo "--- mega/sdk/include contents ---"
+            ls -la mega/sdk/include/ | head -20
+            echo "--- megachatapi.i lines 1-25 ---"
+            sed -n '1,25p' megachat/sdk/bindings/megachatapi.i
+          } > /tmp/swig_debug.log 2>&1
+
+      - name: Upload diagnostic log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: swig-debug-log
+          path: /tmp/swig_debug.log
+          if-no-files-found: ignore
