@@ -46,7 +46,7 @@ jobs:
           sdkmanager "build-tools;30.0.2"
 
       - name: Install native build dependencies
-        run: sudo apt-get update && sudo apt-get install -y build-essential swig automake libtool autoconf cmake gnu-config
+        run: sudo apt-get update && sudo apt-get install -y build-essential swig automake libtool autoconf cmake autotools-dev
 
       - name: Install NDK r21d
         run: |
