@@ -60,6 +60,7 @@ jobs:
           chmod +x build.sh
           sed -i 's#LOG_FILE=/dev/null#LOG_FILE=/tmp/build_sdk.log#' build.sh
           sed -i 's/-DENABLE_CHAT mega\/sdk\/bindings\/megaapi.i/mega\/sdk\/bindings\/megaapi.i/' build.sh
+          sed -i 's#SODIUM_DOWNLOAD_URL=https://download.libsodium.org/libsodium/releases/${SODIUM_SOURCE_FILE}#SODIUM_DOWNLOAD_URL=https://github.com/jedisct1/libsodium/releases/download/1.0.18-RELEASE/${SODIUM_SOURCE_FILE}#' build.sh
           ./build.sh all
 
       - name: Upload build log
